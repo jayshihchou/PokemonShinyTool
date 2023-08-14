@@ -335,7 +335,7 @@
                 if (succeed) {
                     cookie = result;
                     saveCookie();
-                    readTextFile('resources/data.json', onReadDataFile);
+                    readTextFile('./resources/data.json', onReadDataFile);
                     console.log('done parse')
                 }
             } else {
@@ -533,7 +533,7 @@
             button1.parentNode.removeChild(button1);
             const container = document.getElementById('container');
             document.body.removeChild(container);
-            readTextFile('resources/data.json', onReadDataFile);
+            readTextFile('./resources/data.json', onReadDataFile);
             noPermision = false;
         }
 
