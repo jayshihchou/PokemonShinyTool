@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8' />
+    <title>Pokemon Shiny Tool</title>
+</head>
+
+<style>
+    /* table style start */
+    @charset "UTF-8";
+    @import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,700);
+
+    body {
+        font-family: 'Open Sans', sans-serif;
+        font-weight: 300;
+        line-height: 1.42em;
+        color: #A7A1AE;
+        background-color: #1F2739;
+    }
+
+    table th h1 {
+        font-weight: bold;
+        font-size: 2em;
+        text-align: left;
+        color: #185875;
+    }
+
+    table td {
+        font-weight: normal;
+        font-size: 2em;
+        -webkit-box-shadow: 0 2px 2px -2px #0E1119;
+        -moz-box-shadow: 0 2px 2px -2px #0E1119;
+        box-shadow: 0 2px 2px -2px #0E1119;
+    }
+
+    table {
+        text-align: left;
+        overflow: hidden;
+        width: 80%;
+        margin: 0 auto;
+        display: table;
+        padding: 0 0 8em 0;
+    }
+
+    table td,
+    table th {
+        padding-bottom: 2%;
+        padding-top: 2%;
+        padding-left: 0.5%;
+    }
+
+    /* Background-color of the odd rows */
+    table tr:nth-child(odd) {
+        background-color: #323C50;
+    }
+
+    /* Background-color of the even rows */
+    table tr:nth-child(even) {
+        background-color: #2C3446;
+    }
+
+    table th {
+        background-color: #1F2739;
+    }
+
+    table td:first-child {
+        color: #FB667A;
+    }
+
+    table tr:hover {
+        background-color: #464A52;
+        -webkit-box-shadow: 0 6px 6px -6px #0E1119;
+        -moz-box-shadow: 0 6px 6px -6px #0E1119;
+        box-shadow: 0 6px 6px -6px #0E1119;
+    }
+
+    body .switch {
+        display: block;
+    }
+
+    body .switch input[type=checkbox] {
+        display: none;
+    }
+
+    body .switch input[type=checkbox]:checked+label {
+        background-color: #2f7df9;
+    }
+
+    body .switch input[type=checkbox]:checked+label:after {
+        left: 33px;
+    }
+
+    body .switch label {
+        transition: all 200ms ease-in-out;
+        display: inline-block;
+        position: relative;
+        height: 30px;
+        width: 60px;
+        border-radius: 30px;
+        cursor: pointer;
+        background-color: #ddd;
+        color: transparent;
+    }
+
+    body .switch label:after {
+        transition: all 200ms ease-in-out;
+        content: " ";
+        position: absolute;
+        height: 23px;
+        width: 23px;
+        border-radius: 50%;
+        background-color: white;
+        top: 3px;
+        left: 3px;
+        right: auto;
+        box-shadow: 1px 1px 1px gray;
+    }
+
+    body .switch.colored input[type=checkbox]:checked+label {
+        background-color: #55c946;
+    }
+
+    body .switch.colored label {
+        background-color: #ff4949;
+    }
+
+    /* checkbox style end */
+
+    /* button style start */
+    button:hover {
+        background-color: #e7e7e7;
+    }
+
+    button {
+        background-color: white;
+        border: 2px solid #e7e7e7;
+        color: black;
+        padding: 11px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        transition-duration: 0.4s;
+        cursor: pointer;
+    }
+
+    /* button style end */
+</style>
+
+<body>
+    <script type='module'>
+        function setCookie(c_name, value, expiredays) {
+            var exdate = new Date();
+            var expires = ((expiredays == null) ? "" : "; expires=" + exdate.toGMTString());
+            document.cookie = c_name + "=" + value + expires + "; path=/";
+        }
+
+        function saveCookie() {
+            console.log('save cookie');
+            const dataStr = 'data=' + JSON.stringify(cookie);
+            if (!noPermision)
+                document.cookie = dataStr;
+            console.log(dataStr);
+            return dataStr;
+        }
+
+        function parseCookie(inputCookie) {
+            console.log('parseCookie:');
+            let result = {};
+            let cookieStr = inputCookie;
+            let succeed = false;
+            console.log(cookieStr);
+            if (cookieStr !== undefined && cookieStr.length > 0) {
+                if (cookieStr.startsWith('data=')) {
+                    cookieStr = cookieStr.replace('data=', '').replace(';', '');
+                    if (cookieStr.includes('data=')) {
+                        cookieStr = '{}';
+                    }
+                }
+                // console.log('cookieStr:');
+                // console.log(cookieStr);
+                if (cookieStr.length > 0) {
+                    try {
+                        result = JSON.parse(cookieStr);
+                        succeed = true;
+                    }
+                    catch (e) {
+                        console.log(`parse cookie error: ${e}`);
+                        console.log(cookieStr);
+                        setCookie('data', '', -2);
+                        result = {};
+                    }
+                }
+            }
+            if (result['list'] === undefined) {
+                result['list'] = [];
+            }
+            // console.log(result);
+            return [result, succeed];
+        }
+
+        function readTextFile(file, callback) {
+            var rawFile = new XMLHttpRequest();
+            rawFile.open('GET', file, true);
+            rawFile.onreadystatechange = function () {
+                if (rawFile.readyState === 4) {
+                    var allText = rawFile.responseText;
+                    callback(allText);
+                }
+            }
+            rawFile.send();
+        }
+
+        function createCheckbox(
+            rootItem,
+            onInitCheckBox,
+            Text,
+        ) {
+            const div0 = document.createElement('div');
+            div0.style.width = '600px';
+            div0.style.fontSize = '25px';
+            div0.className = 'switch colored';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            onInitCheckBox(checkbox);
+            div0.appendChild(checkbox);
+
+            const label = document.createElement('label');
+            label.htmlFor = checkbox.id;
+            label.style.marginRight = '15px';
+            div0.appendChild(label);
+
+            if (Text !== undefined) {
+                const textNode = document.createTextNode(Text);
+                textNode.marginBottom = '15px';
+                div0.appendChild(textNode);
+            }
+
+            rootItem.appendChild(div0);
+        }
+
+        function toggleClick() {
+            if (this.checked) {
+                cookie['list'].push(parseInt(this.name));
+            }
+            else {
+                const index = cookie['list'].indexOf(parseInt(this.name));
+                // console.log(index);
+                if (index !== -1) {
+                    cookie['list'].splice(index, 1);
+                }
+            }
+            saveCookie();
+        }
+
+        function createFilter() {
+            const filterDiv = document.createElement('div');
+            filterDiv.id = 'filter';
+
+            const copyText = document.createElement('input');
+            copyText.type = 'text';
+            copyText.id = 'copyText';
+            copyText.placeholder = 'Save & Load Data Here';
+            copyText.title = "Save & Load";
+            copyText.style.width = '505px';
+            copyText.style.fontSize = '16px';
+            copyText.style.padding = '12px 20px 12px 40px';
+            copyText.style.border = '1px solid #ddd';
+            copyText.style.marginBottom = '12px';
+            filterDiv.appendChild(copyText);
+
+            const copyToClipboardButton = document.createElement('button');
+            copyToClipboardButton.innerHTML = "Save To Clipboard";
+            copyToClipboardButton.onclick = onCopyDataToClipboardButtonClick;
+            filterDiv.appendChild(copyToClipboardButton);
+
+            const parseFromTextButton = document.createElement('button');
+            parseFromTextButton.innerHTML = "Parse From Data";
+            parseFromTextButton.onclick = onParseFromTextField;
+            filterDiv.appendChild(parseFromTextButton);
+
+            filterDiv.appendChild(document.createElement('br'));
+
+            const textField = document.createElement('input');
+            textField.type = 'text';
+            textField.id = 'searchbar_text_field';
+            textField.onkeyup = onUpdateSearchBar;
+            textField.placeholder = 'Search for pokemon';
+            textField.title = "Type in a pokemon";
+            textField.style.width = '900px';
+            textField.style.fontSize = '16px';
+            textField.style.padding = '12px 20px 12px 40px';
+            textField.style.border = '1px solid #ddd';
+            textField.style.marginBottom = '12px';
+            filterDiv.appendChild(textField);
+
+            createCheckbox(
+                filterDiv,
+                (checkbox) => {
+                    checkbox.name = 'checkbox_filter';
+                    checkbox.id = 'searchbar_checkbox_filter';
+                    checkbox.onclick = toggleFilter;
+                },
+                'Filter',
+            );
+
+            document.body.appendChild(filterDiv);
+        }
+
+        function onCopyDataToClipboardButtonClick() {
+            if (!isDoneAsking) return;
+            const copyText = document.getElementById('copyText');
+            copyText.value = saveCookie();
+
+            // Select the text field
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); // For mobile devices
+
+            // Copy the text inside the text field
+            navigator.clipboard.writeText(copyText.value);
+
+            // Alert the copied text
+            alert('Copied the text: ' + copyText.value);
+        }
+
+        function onParseFromTextField() {
+            if (!isDoneAsking) return;
+            const copyText = document.getElementById('copyText');
+            const data = copyText.value;
+            if (data !== undefined && data !== null && data.length > 0) {
+                var [result, succeed] = parseCookie(data);
+                if (succeed) {
+                    cookie = result;
+                    saveCookie();
+                    readTextFile('resources/data.json', onReadDataFile);
+                    console.log('done parse')
+                }
+            } else {
+                alert('Text field is empty!')
+            }
+        }
+
+        function toggleFilter() {
+            filterToggle = this.checked;
+            if (fullDatas !== undefined)
+                createTable(fullDatas, searchStr, filterToggle)
+        }
+
+        function onUpdateSearchBar() {
+            searchStr = this.value.toUpperCase();
+            if (fullDatas !== undefined)
+                createTable(fullDatas, searchStr, filterToggle);
+        }
+
+        function createTable(data, filter = '', onlyUnClicked = false) {
+            const body = document.body;
+            const oldTbl = document.getElementById('mainTable');
+            if (oldTbl !== undefined && oldTbl !== null) {
+                body.removeChild(oldTbl);
+            }
+            const tblDiv = document.createElement('div');
+            tblDiv.id = 'mainTable';
+            const tbl = document.createElement('table');
+            tbl.style.width = '350px';
+            tbl.style.height = '300px';
+            tbl.style.offsetWidth = '350px';
+
+            const typeDiv = document.createElement('div');
+            tbl.appendChild(typeDiv);
+
+            const tr_first = tbl.insertRow();
+            let td00 = tr_first.insertCell();
+            let div00 = document.createElement('div');
+            div00.style.width = '600px';
+            div00.appendChild(document.createTextNode('Pokemon'));
+            td00.appendChild(div00);
+            td00 = tr_first.insertCell();
+            div00 = document.createElement('div');
+            div00.style.width = '350px';
+            div00.appendChild(document.createTextNode('Normal'));
+            td00.appendChild(div00);
+            td00 = tr_first.insertCell();
+            div00 = document.createElement('div');
+            div00.style.width = '350px';
+            div00.appendChild(document.createTextNode('Shiny'));
+            td00.appendChild(div00);
+
+            let totalSize = 0;
+            let cached = 0;
+            const typeData = {};
+            const filters = [];
+            if (filter !== undefined && filter.length > 0)
+            {
+                if (filter.includes(' ')) {
+                    filter.split(' ').forEach((v) => {
+                        filters.push(v);
+                    });
+                } else {
+                    filters.push(filter);
+                }
+            }
+
+            function do_filter(itemName) {
+                if (filters.length == 0) return false;
+
+                const itemNameUpper = itemName.toUpperCase();
+
+                let filter = false;
+                filters.forEach((v) => {
+                    if (!itemNameUpper.includes(v) && !v.includes(itemNameUpper)) {
+                        filter = true;
+                    }
+                });
+
+                return filter;
+            }
+
+            for (const [key, value] of Object.entries(data)) {
+                totalSize++;
+                const name = value['name'];
+                const id = `${value['id']}`.padStart(3, '0');
+                const types = value['types'];
+
+                const imgs = value['imgs'];
+                const isClicked = cookie['list'].includes(value['id']);
+                if (isClicked) {
+                    cached++;
+                }
+
+                let typeStr = '';
+                types.forEach((v, index) => {
+                    if (index !== 0) {
+                        typeStr = `${typeStr} ${v}`
+                    } else {
+                        typeStr = v;
+                    }
+                    if (!(v in typeData)) {
+                        typeData[v] = {};
+                        typeData[v]['count'] = 0;
+                        typeData[v]['total'] = 0;
+                    }
+                    if (isClicked)
+                        typeData[v]['count']++;
+                    typeData[v]['total']++;
+                });
+
+                const itemName = `# ${id} ${name} (${typeStr})`;
+                // console.log(`cookie['list'].includes(${value['id']}): ${isClicked}`);
+                if (do_filter(itemName)) {
+                    continue;
+                }
+                if (onlyUnClicked) {
+                    if (isClicked)
+                        continue;
+                }
+
+                const tr = tbl.insertRow();
+                const td0 = tr.insertCell();
+
+                createCheckbox(
+                    td0,
+                    (checkbox) => {
+                        checkbox.name = value['id'];
+                        checkbox.id = `checkbox_${checkbox.name}`;
+                        checkbox.checked = isClicked;
+                        checkbox.onclick = toggleClick;
+                    },
+                    itemName,
+                );
+
+                for (let x = 0; x < imgs.length; x++) {
+                    const td = tr.insertCell();
+                    const div = document.createElement('div');
+                    div.style.width = '250px';
+
+                    var img = document.createElement('img');
+                    img.loading = 'lazy';
+                    img.src = imgs[x];
+                    img.width = 100;
+
+                    div.appendChild(img);
+                    td.appendChild(div);
+                }
+            }
+
+            for (const [key, value] of Object.entries(typeData)) {
+                const typeButton = document.createElement('button');
+                typeButton.innerHTML = `${key} (${value['count']}/${value['total']})`;
+                typeButton.onclick = () => {
+                    const textField = document.getElementById('searchbar_text_field');
+                    if (textField !== null && textField !== undefined) {
+                        textField.value = `${textField.value} ${key}`;
+                        textField.onkeyup();
+                    }
+                };
+                typeDiv.appendChild(typeButton);
+            }
+
+            tblDiv.appendChild(tbl);
+
+            body.appendChild(tblDiv);
+
+            let totalCatchDiv = document.getElementById('total_catch');
+            if (totalCatchDiv === undefined || totalCatchDiv === null) {
+                const filterDiv = document.getElementById('filter');
+                if (filterDiv !== undefined) {
+                    totalCatchDiv = document.createElement('div');
+                    totalCatchDiv.id = 'total_catch';
+                    filterDiv.appendChild(totalCatchDiv);
+                }
+            }
+
+            if (totalCatchDiv !== null) {
+                totalCatchDiv.innerHTML = `${cached} / ${totalSize}`;
+            }
+        }
+
+        function onReadDataFile(text) {
+            fullDatas = JSON.parse(text);
+            createTable(fullDatas, searchStr, filterToggle);
+        }
+
+        function onClickOK() {
+            isDoneAsking = true;
+            cookie['isDoneAsking'] = true;
+            saveCookie();
+            const button0 = document.getElementById('button0');
+            const button1 = document.getElementById('button1');
+            button0.parentNode.removeChild(button0);
+            button1.parentNode.removeChild(button1);
+            const container = document.getElementById('container');
+            document.body.removeChild(container);
+            readTextFile('resources/data.json', onReadDataFile);
+            noPermision = false;
+        }
+
+        function onClickNo() {
+            const button0 = document.getElementById('button0');
+            const button1 = document.getElementById('button1');
+            button0.parentNode.removeChild(button0);
+            button1.parentNode.removeChild(button1);
+            const container = document.getElementById('container');
+            // container.innerHTML = 'OK then';
+            noPermision = true;
+        }
+
+        function askForPermission() {
+            const container = document.createElement('div');
+            container.id = 'container';
+            container.innerHTML = 'This Tool Use Cookie to Save Your Options<br>';
+            const button0 = document.createElement('button');
+            button0.id = 'button0';
+            button0.onclick = onClickOK;
+            button0.innerHTML = 'OK';
+            container.appendChild(button0);
+            const button1 = document.createElement('button');
+            button1.id = 'button1';
+            button1.onclick = onClickNo;
+            button1.innerHTML = 'No';
+            container.appendChild(button1);
+            document.body.appendChild(container);
+        }
+
+        let isDoneAsking = false;
+        let noPermision = false;
+        let fullDatas = undefined;
+        let searchStr = '';
+        let filterToggle = false;
+        let [cookie, cookieSucceed] = parseCookie(document.cookie);
+
+        function main() {
+            console.log('cookie:');
+            console.log(cookie);
+            isDoneAsking = 'isDoneAsking' in cookie && cookie['isDoneAsking'];
+
+            if (!isDoneAsking) {
+                askForPermission();
+            }
+            createFilter();
+            readTextFile('resources/data.json', onReadDataFile);
+        }
+
+        try {
+            main();
+        } catch (e) {
+            console.log(e);
+            document.body.innerHTML = `${e}`;
+        }
+    </script>
+</body>
+
+</html>

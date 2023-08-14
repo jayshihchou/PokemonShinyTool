@@ -1,0 +1,22 @@
+image: alpine:latest
+
+cache:
+  # Required to keep artifacts from old builds, e.g. from master
+  paths:
+    - public
+
+
+pages:
+  stage: deploy
+  script:
+    - dir="$CI_COMMIT_REF_SLUG"
+    - if [ "$CI_COMMIT_REF_SLUG" == "$CI_DEFAULT_BRANCH" ]; then dir=""; fi;
+    - dir="public/$dir"
+    - echo "Deploying to $dir"
+    - mkdir -p $dir/resources/
+    - cp -r resources/. $dir/resources/
+    - cp index.html $dir/
+    - ls $dir
+  artifacts:
+    paths:
+    - public
